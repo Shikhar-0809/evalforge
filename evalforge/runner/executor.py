@@ -60,13 +60,14 @@ class EvalExecutor:
         provider: str,
         model: str,
         model_version: Optional[str] = None,
+        run_id: Optional[str] = None,
     ) -> str:
         task_config = self._registry.load(task_name)
         config_hash = _config_hash_from_yaml(task_name)
-        run_id = str(uuid.uuid4())
+        rid = run_id if run_id is not None else str(uuid.uuid4())
         started_at = datetime.utcnow().isoformat()
         run_cfg = RunConfig(
-            run_id=run_id,
+            run_id=rid,
             task_name=task_name,
             provider=provider,
             model_name=model,
@@ -78,7 +79,7 @@ class EvalExecutor:
 
         logger.info(
             "Starting eval run %s task=%s provider=%s model=%s",
-            run_id,
+            rid,
             task_name,
             provider,
             model,
@@ -121,7 +122,7 @@ class EvalExecutor:
                 except LLMError as exc:
                     logger.error(
                         "LLM error for run %s item %s: %s",
-                        run_id,
+                        rid,
                         item_index,
                         exc,
                     )
@@ -145,7 +146,7 @@ class EvalExecutor:
             logger.debug(
                 "Run %s item %s scores semantic=%.4f keyword=%.4f structured=%.4f "
                 "composite=%.4f passed=%s",
-                run_id,
+                rid,
                 item_index,
                 comp.semantic_score,
                 comp.keyword_score,
@@ -156,7 +157,7 @@ class EvalExecutor:
 
             result = EvalResult(
                 id=str(uuid.uuid4()),
-                run_id=run_id,
+                run_id=rid,
                 item_index=item_index,
                 input_text=input_text,
                 reference_answer=reference,
@@ -176,6 +177,6 @@ class EvalExecutor:
             *(process_item(i, row) for i, row in enumerate(items)),
         )
 
-        stats = await get_run_stats(run_id)
-        await update_run_status(run_id, "completed", stats)
-        return run_id
+        stats = await get_run_stats(rid)
+        await update_run_status(rid, "completed", stats)
+        return rid

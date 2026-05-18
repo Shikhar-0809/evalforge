@@ -2,51 +2,221 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Eval run {{ run.id }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>EvalForge Report — {{ run.id }}</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --danger-bg: #3d1f24;
+      --danger-border: #8b3a44;
+      --bar-track: #2d3a4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; word-break: break-all; }
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.75rem 0 0.75rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.35rem;
+    }
+    table.meta, table.data {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    table.meta th, table.meta td,
+    table.data th, table.data td {
+      padding: 0.6rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    table.meta th { width: 12rem; color: var(--muted); font-weight: 500; }
+    table.data th {
+      background: #243044;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    table.data tr:last-child td { border-bottom: none; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+      gap: 0.75rem;
+      margin: 0.5rem 0 1rem;
+    }
+    .summary .box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+    .summary .box .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+    .summary .box .value { font-size: 1.35rem; font-weight: 600; margin-top: 0.2rem; }
+    table.breakdown th { width: 40%; }
+    .dist { margin-top: 0.5rem; }
+    .dist-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.45rem;
+    }
+    .dist-label { width: 5rem; font-size: 0.85rem; color: var(--muted); flex-shrink: 0; }
+    .dist-track {
+      flex: 1;
+      height: 1.1rem;
+      background: var(--bar-track);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .dist-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #2b6cb0, var(--accent));
+      border-radius: 4px;
+      min-width: 2px;
+    }
+    .dist-count { width: 3rem; text-align: right; font-size: 0.8rem; color: var(--muted); }
+    .failures tr { background: var(--danger-bg); }
+    .failures td { border-color: var(--danger-border); }
+    .truncate { max-width: 28rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pass-yes { color: #5ad67d; font-weight: 600; }
+    .pass-no { color: #f07178; font-weight: 600; }
+  </style>
 </head>
 <body>
-  <h1>Run {{ run.id }}</h1>
-  <p><strong>Task:</strong> {{ run.task_name }} |
-     <strong>Provider:</strong> {{ run.provider }} |
-     <strong>Model:</strong> {{ run.model_name }}</p>
-  {% if run.model_version %}<p><strong>Model version:</strong> {{ run.model_version }}</p>{% endif %}
-  <p><strong>Status:</strong> {{ run.status }} |
-     <strong>Started:</strong> {{ run.started_at }}{% if run.completed_at %} |
-     <strong>Completed:</strong> {{ run.completed_at }}{% endif %}</p>
-  <h2>Aggregates</h2>
-  <ul>
-    <li>Total items: {{ stats.total_items }}</li>
-    <li>Passed items: {{ stats.passed_items }}</li>
-    <li>Avg composite: {{ "%.4f"|format(stats.avg_composite_score or 0) }}</li>
-    <li>Avg semantic: {{ "%.4f"|format(stats.avg_semantic_score or 0) }}</li>
-    <li>Avg keyword: {{ "%.4f"|format(stats.avg_keyword_score or 0) }}</li>
-    <li>Avg structured: {{ "%.4f"|format(stats.avg_structured_score or 0) }}</li>
-  </ul>
-  <h2>Items</h2>
-  <table border="1" cellpadding="4" cellspacing="0">
+  <header>
+    <h1>EvalForge Report</h1>
+    <p class="sub">Run ID: {{ run.id }}</p>
+  </header>
+
+  <h2>Run metadata</h2>
+  <table class="meta">
+    <tr><th>Task</th><td>{{ run.task_name }}</td></tr>
+    <tr><th>Provider</th><td>{{ run.provider }}</td></tr>
+    <tr><th>Model</th><td>{{ run.model_name }}{% if run.model_version %} ({{ run.model_version }}){% endif %}</td></tr>
+    <tr><th>Started at</th><td>{{ run.started_at }}</td></tr>
+    <tr><th>Config hash</th><td style="word-break:break-all;font-size:0.85rem">{{ run.config_hash }}</td></tr>
+    <tr><th>Status</th><td>{{ run.status }}</td></tr>
+  </table>
+
+  <h2>Summary</h2>
+  <div class="summary">
+    <div class="box">
+      <div class="label">Total items</div>
+      <div class="value">{{ stats.total_items }}</div>
+    </div>
+    <div class="box">
+      <div class="label">Passed</div>
+      <div class="value">{{ stats.passed_items }}</div>
+    </div>
+    <div class="box">
+      <div class="label">Failed</div>
+      <div class="value">{{ stats.failed_items }}</div>
+    </div>
+    <div class="box">
+      <div class="label">Pass rate</div>
+      <div class="value">{{ "%.1f"|format(stats.pass_rate_pct) }}%</div>
+    </div>
+    <div class="box">
+      <div class="label">Avg composite</div>
+      <div class="value">{{ "%.4f"|format(stats.avg_composite_score or 0) }}</div>
+    </div>
+  </div>
+
+  <h2>Score breakdown</h2>
+  <table class="meta breakdown">
+    <tr><th>Semantic (avg)</th><td>{{ "%.4f"|format(stats.avg_semantic_score or 0) }}</td></tr>
+    <tr><th>Keyword (avg)</th><td>{{ "%.4f"|format(stats.avg_keyword_score or 0) }}</td></tr>
+    <tr><th>Structured (avg)</th><td>{{ "%.4f"|format(stats.avg_structured_score or 0) }}</td></tr>
+  </table>
+
+  <h2>Score distribution</h2>
+  <p style="color:var(--muted);font-size:0.9rem;margin:0 0 0.5rem">Composite score bands (share of items).</p>
+  <div class="dist">
+    {% for b in stats.distribution %}
+    <div class="dist-row">
+      <span class="dist-label">{{ b.label }}</span>
+      <div class="dist-track">
+        <div class="dist-bar" style="width: {{ "%.2f"|format(b.pct) }}%"></div>
+      </div>
+      <span class="dist-count">{{ b.count }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2>Top 5 failures <span style="font-weight:400;color:var(--muted)">(lowest composite)</span></h2>
+  <table class="data failures">
     <thead>
       <tr>
         <th>#</th>
-        <th>Passed</th>
+        <th>Input (100)</th>
+        <th>Response (200)</th>
         <th>Composite</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in failures %}
+      <tr>
+        <td>{{ r.item_index }}</td>
+        <td class="truncate" title="{{ r.input_text or '' }}">{{ (r.input_text or '')[:100] }}{% if (r.input_text or '')|length > 100 %}…{% endif %}</td>
+        <td class="truncate" title="{{ r.model_response or '' }}">{{ (r.model_response or '')[:200] }}{% if (r.model_response or '')|length > 200 %}…{% endif %}</td>
+        <td>{{ "%.4f"|format((r.composite_score or 0)|float) }}</td>
+      </tr>
+    {% endfor %}
+    {% if not failures %}
+      <tr><td colspan="4" style="color:var(--muted)">No results.</td></tr>
+    {% endif %}
+    </tbody>
+  </table>
+
+  <h2>Full results</h2>
+  <p style="color:var(--muted);font-size:0.9rem">Sorted by composite score ascending.</p>
+  <table class="data">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Composite</th>
+        <th>Passed</th>
         <th>Semantic</th>
         <th>Keyword</th>
         <th>Structured</th>
         <th>Latency ms</th>
-        <th>Error</th>
       </tr>
     </thead>
     <tbody>
     {% for r in results %}
       <tr>
         <td>{{ r.item_index }}</td>
-        <td>{{ r.passed }}</td>
-        <td>{{ r.composite_score }}</td>
-        <td>{{ r.semantic_score }}</td>
-        <td>{{ r.keyword_score }}</td>
-        <td>{{ r.structured_score }}</td>
-        <td>{{ r.latency_ms }}</td>
-        <td>{{ r.error or "" }}</td>
+        <td>{{ "%.4f"|format((r.composite_score or 0)|float) }}</td>
+        <td>{% if r.passed %}<span class="pass-yes">✓</span>{% else %}<span class="pass-no">✗</span>{% endif %}</td>
+        <td>{{ "%.4f"|format((r.semantic_score or 0)|float) }}</td>
+        <td>{{ "%.4f"|format((r.keyword_score or 0)|float) }}</td>
+        <td>{{ "%.4f"|format((r.structured_score or 0)|float) }}</td>
+        <td>{{ r.latency_ms if r.latency_ms is not none else "—" }}</td>
       </tr>
     {% endfor %}
     </tbody>
