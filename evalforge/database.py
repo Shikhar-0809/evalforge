@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import aiosqlite
 
 from evalforge.config import settings
+
+write_lock = asyncio.Lock()
 
 _SCHEMA_PATH = Path(__file__).resolve().parent / "storage" / "schema.sql"
 
