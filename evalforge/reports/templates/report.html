@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Eval run {{ run.id }}</title>
+</head>
+<body>
+  <h1>Run {{ run.id }}</h1>
+  <p><strong>Task:</strong> {{ run.task_name }} |
+     <strong>Provider:</strong> {{ run.provider }} |
+     <strong>Model:</strong> {{ run.model_name }}</p>
+  {% if run.model_version %}<p><strong>Model version:</strong> {{ run.model_version }}</p>{% endif %}
+  <p><strong>Status:</strong> {{ run.status }} |
+     <strong>Started:</strong> {{ run.started_at }}{% if run.completed_at %} |
+     <strong>Completed:</strong> {{ run.completed_at }}{% endif %}</p>
+  <h2>Aggregates</h2>
+  <ul>
+    <li>Total items: {{ stats.total_items }}</li>
+    <li>Passed items: {{ stats.passed_items }}</li>
+    <li>Avg composite: {{ "%.4f"|format(stats.avg_composite_score or 0) }}</li>
+    <li>Avg semantic: {{ "%.4f"|format(stats.avg_semantic_score or 0) }}</li>
+    <li>Avg keyword: {{ "%.4f"|format(stats.avg_keyword_score or 0) }}</li>
+    <li>Avg structured: {{ "%.4f"|format(stats.avg_structured_score or 0) }}</li>
+  </ul>
+  <h2>Items</h2>
+  <table border="1" cellpadding="4" cellspacing="0">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Passed</th>
+        <th>Composite</th>
+        <th>Semantic</th>
+        <th>Keyword</th>
+        <th>Structured</th>
+        <th>Latency ms</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.item_index }}</td>
+        <td>{{ r.passed }}</td>
+        <td>{{ r.composite_score }}</td>
+        <td>{{ r.semantic_score }}</td>
+        <td>{{ r.keyword_score }}</td>
+        <td>{{ r.structured_score }}</td>
+        <td>{{ r.latency_ms }}</td>
+        <td>{{ r.error or "" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
