@@ -1,0 +1,31 @@
+name: summarization
+version: "1.0"
+description: "Evaluate ability to summarize text passages concisely"
+dataset:
+  path: "datasets/summarization.jsonl"
+  input_field: "passage"
+  reference_field: "summary"
+prompt_template: |
+  Summarize the following passage in one sentence.
+
+  Passage:
+  {input}
+
+  Summary:
+scoring:
+  semantic:
+    weight: 0.8
+    model: "all-MiniLM-L6-v2"
+  keyword:
+    weight: 0.0
+    required_keywords: []
+    min_coverage: 0.0
+  structured:
+    weight: 0.2
+    type: "length_check"
+    min_length: 20
+    max_length: 300
+pass_threshold: 0.60
+max_concurrent: 5
+timeout_seconds: 30
+max_tokens: 256

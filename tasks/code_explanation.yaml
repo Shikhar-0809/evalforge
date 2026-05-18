@@ -1,0 +1,32 @@
+name: code_explanation
+version: "1.0"
+description: "Evaluate model's ability to explain code snippets clearly"
+dataset:
+  path: "datasets/code_explanation.jsonl"
+  input_field: "code"
+  reference_field: "explanation"
+prompt_template: |
+  You are a senior software engineer. Explain the following code snippet clearly and concisely.
+  Focus on what it does, not how it works line-by-line.
+
+  Code:
+  {input}
+
+  Explanation:
+scoring:
+  semantic:
+    weight: 0.5
+    model: "all-MiniLM-L6-v2"
+  keyword:
+    weight: 0.3
+    required_keywords: ["function", "returns", "parameter", "loop", "condition"]
+    min_coverage: 0.4
+  structured:
+    weight: 0.2
+    type: "length_check"
+    min_length: 50
+    max_length: 500
+pass_threshold: 0.65
+max_concurrent: 5
+timeout_seconds: 30
+max_tokens: 1024

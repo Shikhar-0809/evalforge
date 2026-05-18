@@ -1,0 +1,29 @@
+name: factual_qa
+version: "1.0"
+description: "Evaluate factual question answering accuracy"
+dataset:
+  path: "datasets/factual_qa.jsonl"
+  input_field: "question"
+  reference_field: "answer"
+prompt_template: |
+  Answer the following question accurately and concisely in one or two sentences.
+
+  Question: {input}
+
+  Answer:
+scoring:
+  semantic:
+    weight: 0.4
+    model: "all-MiniLM-L6-v2"
+  keyword:
+    weight: 0.4
+    required_keywords: []
+    min_coverage: 0.0
+  structured:
+    weight: 0.2
+    type: "regex"
+    pattern: ".+"
+pass_threshold: 0.60
+max_concurrent: 5
+timeout_seconds: 30
+max_tokens: 256

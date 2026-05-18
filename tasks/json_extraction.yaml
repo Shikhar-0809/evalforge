@@ -1,0 +1,31 @@
+name: json_extraction
+version: "1.0"
+description: "Evaluate ability to extract structured data into JSON"
+dataset:
+  path: "datasets/json_extraction.jsonl"
+  input_field: "text"
+  reference_field: "expected_json"
+prompt_template: |
+  Extract the following information from the text and return ONLY a JSON object
+  with exactly these fields: "name", "date", "location".
+  Do not include any explanation or extra text.
+
+  Text: {input}
+
+  JSON:
+scoring:
+  semantic:
+    weight: 0.2
+    model: "all-MiniLM-L6-v2"
+  keyword:
+    weight: 0.0
+    required_keywords: []
+    min_coverage: 0.0
+  structured:
+    weight: 0.8
+    type: "json_fields"
+    required_fields: ["name", "date", "location"]
+pass_threshold: 0.70
+max_concurrent: 5
+timeout_seconds: 30
+max_tokens: 256
