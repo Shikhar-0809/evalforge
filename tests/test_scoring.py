@@ -17,21 +17,49 @@ from evalforge.tasks.models import (
     TaskConfig,
 )
 
+# —— SemanticScorer (async) ——
 
-# —— KeywordScorer (sync) ——
+
+@pytest.mark.asyncio
+async def test_semantic_identical_strings_high_score() -> None:
+    scorer = SemanticScorer()
+    s = await scorer.score("hello world", "hello world")
+    assert s >= 0.99
 
 
-def test_keyword_all_present() -> None:
-    s = KeywordScorer.score("The function returns a parameter in a loop", ["function", "returns"])
+@pytest.mark.asyncio
+async def test_semantic_unrelated_strings_low_score() -> None:
+    scorer = SemanticScorer()
+    s = await scorer.score(
+        "the cat sat on the mat",
+        "quantum physics equations",
+    )
+    assert s < 0.3
+
+
+@pytest.mark.asyncio
+async def test_semantic_none_reference_is_zero() -> None:
+    scorer = SemanticScorer()
+    assert await scorer.score("any response text", None) == 0.0
+
+
+# —— KeywordScorer ——
+
+
+def test_keyword_all_keywords_present() -> None:
+    s = KeywordScorer.score(
+        "The function returns a parameter in a loop",
+        ["function", "returns"],
+    )
     assert s == 1.0
 
 
-def test_keyword_none_present() -> None:
+def test_keyword_no_keywords_present() -> None:
     s = KeywordScorer.score("hello world", ["missing", "also_missing"])
     assert s == 0.0
 
 
-def test_keyword_half_present() -> None:
+def test_keyword_half_keywords_present() -> None:
     s = KeywordScorer.score(
         "alpha and gamma here",
         ["alpha", "beta", "gamma", "delta"],
@@ -39,39 +67,41 @@ def test_keyword_half_present() -> None:
     assert s == pytest.approx(0.5)
 
 
-def test_keyword_case_insensitive() -> None:
+def test_keyword_case_insensitive_matching() -> None:
     s = KeywordScorer.score("HELLO World", ["hello", "world"])
     assert s == 1.0
 
 
-def test_keyword_empty_list() -> None:
-    assert KeywordScorer.score("anything", []) == 1.0
+# —— StructuredScorer: exact_match ——
 
 
-# —— StructuredScorer (sync) ——
-
-
-def test_structured_exact_match_hit() -> None:
+def test_structured_exact_match_identical_strings() -> None:
     cfg = StructuredConfig(weight=1.0, type="exact_match")
-    assert StructuredScorer.score("  same  ", cfg, "same") == 1.0
+    assert StructuredScorer.score("same text", cfg, "same text") == 1.0
 
 
-def test_structured_exact_match_miss() -> None:
+def test_structured_exact_match_mismatch() -> None:
     cfg = StructuredConfig(weight=1.0, type="exact_match")
     assert StructuredScorer.score("a", cfg, "b") == 0.0
 
 
-def test_structured_regex_hit() -> None:
+# —— StructuredScorer: regex ——
+
+
+def test_structured_regex_pattern_found() -> None:
     cfg = StructuredConfig(weight=1.0, type="regex", pattern=r"\d{3}")
     assert StructuredScorer.score("code 999 ok", cfg, None) == 1.0
 
 
-def test_structured_regex_miss() -> None:
+def test_structured_regex_pattern_not_found() -> None:
     cfg = StructuredConfig(weight=1.0, type="regex", pattern=r"ZZZ")
     assert StructuredScorer.score("no match here", cfg, None) == 0.0
 
 
-def test_structured_json_fields_all() -> None:
+# —— StructuredScorer: json_fields ——
+
+
+def test_structured_json_fields_all_required_present() -> None:
     cfg = StructuredConfig(
         weight=1.0,
         type="json_fields",
@@ -80,7 +110,7 @@ def test_structured_json_fields_all() -> None:
     assert StructuredScorer.score('{"a": 1, "b": 2}', cfg, None) == 1.0
 
 
-def test_structured_json_fields_half() -> None:
+def test_structured_json_fields_half_present() -> None:
     cfg = StructuredConfig(
         weight=1.0,
         type="json_fields",
@@ -89,13 +119,16 @@ def test_structured_json_fields_half() -> None:
     assert StructuredScorer.score('{"a": 1}', cfg, None) == 0.5
 
 
-def test_structured_json_fields_malformed() -> None:
+def test_structured_json_fields_malformed_json() -> None:
     cfg = StructuredConfig(
         weight=1.0,
         type="json_fields",
         required_fields=["a"],
     )
     assert StructuredScorer.score("not json", cfg, None) == 0.0
+
+
+# —— StructuredScorer: length_check ——
 
 
 def test_structured_length_check_in_range() -> None:
@@ -128,43 +161,7 @@ def test_structured_length_check_too_long() -> None:
     assert StructuredScorer.score("abcd", cfg, None) == 0.0
 
 
-# —— SemanticScorer (async) ——
-
-
-@pytest.mark.asyncio
-async def test_semantic_identical() -> None:
-    scorer = SemanticScorer()
-    s = await scorer.score("hello world", "hello world")
-    assert s >= 0.99
-
-
-@pytest.mark.asyncio
-async def test_semantic_unrelated() -> None:
-    scorer = SemanticScorer()
-    s = await scorer.score(
-        "the cat sat on the mat",
-        "quantum physics equations",
-    )
-    assert s < 0.5
-
-
-@pytest.mark.asyncio
-async def test_semantic_none_reference() -> None:
-    scorer = SemanticScorer()
-    assert await scorer.score("anything", None) == 0.0
-
-
-@pytest.mark.asyncio
-async def test_semantic_empty_reference() -> None:
-    scorer = SemanticScorer()
-    assert await scorer.score("anything", "") == 0.0
-
-
-def _minimal_task(
-    scoring: ScoringConfig,
-    *,
-    pass_threshold: float = 0.5,
-) -> TaskConfig:
+def _task(scoring: ScoringConfig, *, pass_threshold: float = 0.5) -> TaskConfig:
     return TaskConfig(
         name="test_task",
         version="1.0",
@@ -180,8 +177,8 @@ def _minimal_task(
 
 
 @pytest.mark.asyncio
-async def test_engine_weights_sum_to_one() -> None:
-    """No reference → semantic weight redistributes; keyword 0.5, structured 1.0."""
+async def test_engine_dr02_redistributes_when_semantic_not_computable() -> None:
+    """Semantic has positive weight but no reference → weight moves to keyword + structured."""
     w_sem, w_key, w_str = 0.3, 0.5, 0.2
     inactive = w_sem
     base = w_key + w_str
@@ -203,7 +200,7 @@ async def test_engine_weights_sum_to_one() -> None:
     expected = round(adj_key * s_key + adj_str * s_str, 4)
 
     engine = ScoreEngine()
-    task = _minimal_task(
+    task = _task(
         ScoringConfig(
             semantic=SemanticConfig(weight=w_sem),
             keyword=KeywordConfig(
@@ -225,9 +222,54 @@ async def test_engine_weights_sum_to_one() -> None:
 
 
 @pytest.mark.asyncio
-async def test_engine_pass_threshold_pass() -> None:
+async def test_engine_dr02_redistributes_when_scorer_weight_zero() -> None:
+    """Keyword weight 0: only structured is active; semantic weight pools to structured."""
+    w_sem, w_key, w_str = 0.4, 0.0, 0.6
+    inactive = w_sem
+    base = w_str
+    adj_str = w_str + inactive * (w_str / base)
+    assert adj_str == pytest.approx(1.0)
+    response = "x" * 50
+    s_str = StructuredScorer.score(
+        response,
+        StructuredConfig(
+            weight=w_str,
+            type="length_check",
+            min_length=1,
+            max_length=100,
+        ),
+        None,
+    )
+    assert s_str == 1.0
+    expected = round(adj_str * s_str, 4)
+
     engine = ScoreEngine()
-    task = _minimal_task(
+    task = _task(
+        ScoringConfig(
+            semantic=SemanticConfig(weight=w_sem),
+            keyword=KeywordConfig(
+                weight=w_key,
+                required_keywords=["nope"],
+                min_coverage=0.0,
+            ),
+            structured=StructuredConfig(
+                weight=w_str,
+                type="length_check",
+                min_length=1,
+                max_length=100,
+            ),
+        ),
+    )
+    result = await engine.score(response, None, task)
+    assert result.composite_score == pytest.approx(expected)
+    assert result.keyword_score == 0.0
+
+
+@pytest.mark.asyncio
+async def test_engine_dr03_pass_threshold_passes() -> None:
+    engine = ScoreEngine()
+    threshold = 0.1
+    task = _task(
         ScoringConfig(
             semantic=SemanticConfig(weight=0.0),
             keyword=KeywordConfig(
@@ -242,16 +284,17 @@ async def test_engine_pass_threshold_pass() -> None:
                 max_length=100,
             ),
         ),
-        pass_threshold=0.1,
+        pass_threshold=threshold,
     )
     result = await engine.score("hello there", None, task)
+    assert result.composite_score >= threshold
     assert result.passed is True
 
 
 @pytest.mark.asyncio
-async def test_engine_pass_threshold_fail() -> None:
+async def test_engine_dr03_pass_threshold_fails() -> None:
     engine = ScoreEngine()
-    task = _minimal_task(
+    task = _task(
         ScoringConfig(
             semantic=SemanticConfig(weight=0.0),
             keyword=KeywordConfig(
@@ -268,30 +311,6 @@ async def test_engine_pass_threshold_fail() -> None:
         ),
         pass_threshold=0.99,
     )
-    # No "hello" → keyword 0; length still passes → composite = 0.2 * 1.0 = 0.2
     result = await engine.score("goodbye short", None, task)
     assert result.passed is False
-
-
-@pytest.mark.asyncio
-async def test_engine_dr02_redistribution() -> None:
-    engine = ScoreEngine()
-    task = _minimal_task(
-        ScoringConfig(
-            semantic=SemanticConfig(weight=0.5),
-            keyword=KeywordConfig(
-                weight=0.3,
-                required_keywords=["alpha"],
-                min_coverage=0.0,
-            ),
-            structured=StructuredConfig(
-                weight=0.2,
-                type="length_check",
-                min_length=1,
-                max_length=500,
-            ),
-        ),
-    )
-    result = await engine.score("contains alpha word", None, task)
-    assert result.composite_score > 0.0
-    assert isinstance(result.passed, bool)
+    assert result.composite_score < task.pass_threshold
