@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from evalforge.storage.results import get_results_for_run, get_run_stats
 from evalforge.storage.runs import get_run
+
+logger = logging.getLogger(__name__)
 
 
 def _project_root() -> Path:
@@ -45,13 +48,27 @@ class ReportGenerator:
     async def build(self, run_id: str) -> str:
         run = await get_run(run_id)
         if run is None:
+            logger.warning("Report build: run not found %s", run_id)
             raise ValueError(f"Run not found: {run_id}")
 
         raw_results = await get_results_for_run(run_id)
         stats = await get_run_stats(run_id)
+        logger.info(
+            "Building report for %s (%d results)",
+            run_id,
+            len(raw_results),
+        )
 
-        results = sorted(raw_results, key=lambda r: _float_score(r, "composite_score"))
-        failures = results[:5]
+        results = sorted(
+            raw_results,
+            key=lambda r: _float_score(r, "composite_score"),
+        )
+
+        failed_only = [r for r in results if not r.get("passed")]
+        failures = sorted(
+            failed_only,
+            key=lambda r: _float_score(r, "composite_score"),
+        )[:5]
 
         total_items = int(stats.get("total_items") or 0)
         passed_items = int(stats.get("passed_items") or 0)
@@ -59,6 +76,11 @@ class ReportGenerator:
             **stats,
             "failed_items": max(0, total_items - passed_items),
             "pass_rate_pct": (100.0 * passed_items / total_items) if total_items else 0.0,
+            "pass_rate_label": (
+                f"{passed_items}/{total_items} ({100.0 * passed_items / total_items:.0f}%)"
+                if total_items
+                else "0/0 (—)"
+            ),
             "distribution": _score_distribution(raw_results),
         }
 
@@ -78,4 +100,5 @@ class ReportGenerator:
         self._output_dir.mkdir(parents=True, exist_ok=True)
         out_path = self._output_dir / f"{run_id}.html"
         out_path.write_text(html, encoding="utf-8")
+        logger.info("Report written %s", out_path)
         return str(out_path.resolve())

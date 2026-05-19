@@ -4,222 +4,134 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>EvalForge Report — {{ run.id }}</title>
-  <style>
-    :root {
-      --bg: #0f1419;
-      --surface: #1a2332;
-      --border: #2d3a4d;
-      --text: #e7ecf3;
-      --muted: #8b9cb3;
-      --accent: #3d8bfd;
-      --danger-bg: #3d1f24;
-      --danger-border: #8b3a44;
-      --bar-track: #2d3a4d;
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 1.5rem;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 600;
-      margin: 0 0 0.25rem;
-      letter-spacing: -0.02em;
-    }
-    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; word-break: break-all; }
-    h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 1.75rem 0 0.75rem;
-      color: var(--accent);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.35rem;
-    }
-    table.meta, table.data {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--surface);
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    table.meta th, table.meta td,
-    table.data th, table.data td {
-      padding: 0.6rem 0.85rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-    table.meta th { width: 12rem; color: var(--muted); font-weight: 500; }
-    table.data th {
-      background: #243044;
-      color: var(--muted);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    table.data tr:last-child td { border-bottom: none; }
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-      gap: 0.75rem;
-      margin: 0.5rem 0 1rem;
-    }
-    .summary .box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.85rem;
-    }
-    .summary .box .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
-    .summary .box .value { font-size: 1.35rem; font-weight: 600; margin-top: 0.2rem; }
-    table.breakdown th { width: 40%; }
-    .dist { margin-top: 0.5rem; }
-    .dist-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.45rem;
-    }
-    .dist-label { width: 5rem; font-size: 0.85rem; color: var(--muted); flex-shrink: 0; }
-    .dist-track {
-      flex: 1;
-      height: 1.1rem;
-      background: var(--bar-track);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .dist-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #2b6cb0, var(--accent));
-      border-radius: 4px;
-      min-width: 2px;
-    }
-    .dist-count { width: 3rem; text-align: right; font-size: 0.8rem; color: var(--muted); }
-    .failures tr { background: var(--danger-bg); }
-    .failures td { border-color: var(--danger-border); }
-    .truncate { max-width: 28rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .pass-yes { color: #5ad67d; font-weight: 600; }
-    .pass-no { color: #f07178; font-weight: 600; }
-  </style>
 </head>
-<body>
-  <header>
-    <h1>EvalForge Report</h1>
-    <p class="sub">Run ID: {{ run.id }}</p>
+<body style="margin:0; font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#f4f6fa; color:#1a1d26; line-height:1.5; padding:24px;">
+
+  <header style="margin-bottom:24px;">
+    <h1 style="margin:0 0 8px; font-size:1.5rem; font-weight:600;">EvalForge Report</h1>
+    <p style="margin:0; color:#5c6578; font-size:0.9rem; word-break:break-all;">Run ID: {{ run.id }}</p>
   </header>
 
-  <h2>Run metadata</h2>
-  <table class="meta">
-    <tr><th>Task</th><td>{{ run.task_name }}</td></tr>
-    <tr><th>Provider</th><td>{{ run.provider }}</td></tr>
-    <tr><th>Model</th><td>{{ run.model_name }}{% if run.model_version %} ({{ run.model_version }}){% endif %}</td></tr>
-    <tr><th>Started at</th><td>{{ run.started_at }}</td></tr>
-    <tr><th>Config hash</th><td style="word-break:break-all;font-size:0.85rem">{{ run.config_hash }}</td></tr>
-    <tr><th>Status</th><td>{{ run.status }}</td></tr>
-  </table>
+  <section style="margin-bottom:28px;">
+    <h2 style="margin:0 0 12px; font-size:1rem; font-weight:600; color:#2d3a8c;">Run metadata</h2>
+    <table style="width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      <tr style="border-bottom:1px solid #e8ebf2;">
+        <th style="text-align:left; padding:10px 14px; width:160px; color:#5c6578; font-weight:500; font-size:0.85rem;">Task</th>
+        <td style="padding:10px 14px;">{{ run.task_name }}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #e8ebf2;">
+        <th style="text-align:left; padding:10px 14px; color:#5c6578; font-weight:500; font-size:0.85rem;">Provider</th>
+        <td style="padding:10px 14px;">{{ run.provider }}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #e8ebf2;">
+        <th style="text-align:left; padding:10px 14px; color:#5c6578; font-weight:500; font-size:0.85rem;">Model</th>
+        <td style="padding:10px 14px;">{{ run.model_name }}{% if run.model_version %} ({{ run.model_version }}){% endif %}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #e8ebf2;">
+        <th style="text-align:left; padding:10px 14px; color:#5c6578; font-weight:500; font-size:0.85rem;">Started at</th>
+        <td style="padding:10px 14px;">{{ run.started_at }}</td>
+      </tr>
+      <tr>
+        <th style="text-align:left; padding:10px 14px; color:#5c6578; font-weight:500; font-size:0.85rem;">Config hash</th>
+        <td style="padding:10px 14px; word-break:break-all; font-size:0.85rem;">{{ run.config_hash }}</td>
+      </tr>
+    </table>
+  </section>
 
-  <h2>Summary</h2>
-  <div class="summary">
-    <div class="box">
-      <div class="label">Total items</div>
-      <div class="value">{{ stats.total_items }}</div>
-    </div>
-    <div class="box">
-      <div class="label">Passed</div>
-      <div class="value">{{ stats.passed_items }}</div>
-    </div>
-    <div class="box">
-      <div class="label">Failed</div>
-      <div class="value">{{ stats.failed_items }}</div>
-    </div>
-    <div class="box">
-      <div class="label">Pass rate</div>
-      <div class="value">{{ "%.1f"|format(stats.pass_rate_pct) }}%</div>
-    </div>
-    <div class="box">
-      <div class="label">Avg composite</div>
-      <div class="value">{{ "%.4f"|format(stats.avg_composite_score or 0) }}</div>
-    </div>
-  </div>
+  <section style="margin-bottom:28px; padding:20px 22px; background:linear-gradient(135deg, #e8f0ff 0%, #f0e8ff 100%); border-radius:10px; border:1px solid #c8d4f0;">
+    <p style="margin:0 0 6px; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:#4a5568; font-weight:600;">Pass rate</p>
+    <p style="margin:0; font-size:2rem; font-weight:700; color:#1e3a5f;">{{ stats.pass_rate_label }}</p>
+  </section>
 
-  <h2>Score breakdown</h2>
-  <table class="meta breakdown">
-    <tr><th>Semantic (avg)</th><td>{{ "%.4f"|format(stats.avg_semantic_score or 0) }}</td></tr>
-    <tr><th>Keyword (avg)</th><td>{{ "%.4f"|format(stats.avg_keyword_score or 0) }}</td></tr>
-    <tr><th>Structured (avg)</th><td>{{ "%.4f"|format(stats.avg_structured_score or 0) }}</td></tr>
-  </table>
+  <section style="margin-bottom:28px;">
+    <h2 style="margin:0 0 12px; font-size:1rem; font-weight:600; color:#2d3a8c;">Per-dimension averages</h2>
+    <table style="width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      <tr style="border-bottom:1px solid #e8ebf2;">
+        <th style="text-align:left; padding:10px 14px; width:40%; color:#5c6578; font-weight:500;">Semantic</th>
+        <td style="padding:10px 14px;">{{ "%.4f"|format(stats.avg_semantic_score or 0) }}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #e8ebf2;">
+        <th style="text-align:left; padding:10px 14px; color:#5c6578; font-weight:500;">Keyword</th>
+        <td style="padding:10px 14px;">{{ "%.4f"|format(stats.avg_keyword_score or 0) }}</td>
+      </tr>
+      <tr>
+        <th style="text-align:left; padding:10px 14px; color:#5c6578; font-weight:500;">Structured</th>
+        <td style="padding:10px 14px;">{{ "%.4f"|format(stats.avg_structured_score or 0) }}</td>
+      </tr>
+    </table>
+  </section>
 
-  <h2>Score distribution</h2>
-  <p style="color:var(--muted);font-size:0.9rem;margin:0 0 0.5rem">Composite score bands (share of items).</p>
-  <div class="dist">
-    {% for b in stats.distribution %}
-    <div class="dist-row">
-      <span class="dist-label">{{ b.label }}</span>
-      <div class="dist-track">
-        <div class="dist-bar" style="width: {{ "%.2f"|format(b.pct) }}%"></div>
+  <section style="margin-bottom:28px;">
+    <h2 style="margin:0 0 12px; font-size:1rem; font-weight:600; color:#2d3a8c;">Score distribution</h2>
+    <p style="margin:0 0 10px; font-size:0.85rem; color:#5c6578;">Items by composite score band (count / share).</p>
+    <div style="background:#fff; border-radius:8px; padding:14px 16px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      {% for b in stats.distribution %}
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <span style="width:72px; flex-shrink:0; font-size:0.85rem; color:#5c6578;">{{ b.label }}</span>
+        <div style="flex:1; height:14px; background:#e8ebf2; border-radius:4px; overflow:hidden;">
+          <div style="height:100%; width:{{ "%.2f"|format(b.pct) }}%; background:linear-gradient(90deg,#4f7df3,#7b5cf0); border-radius:4px; min-width:2px;"></div>
+        </div>
+        <span style="width:36px; text-align:right; font-size:0.8rem; color:#5c6578;">{{ b.count }}</span>
       </div>
-      <span class="dist-count">{{ b.count }}</span>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
+  </section>
 
-  <h2>Top 5 failures <span style="font-weight:400;color:var(--muted)">(lowest composite)</span></h2>
-  <table class="data failures">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Input (100)</th>
-        <th>Response (200)</th>
-        <th>Composite</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for r in failures %}
-      <tr>
-        <td>{{ r.item_index }}</td>
-        <td class="truncate" title="{{ r.input_text or '' }}">{{ (r.input_text or '')[:100] }}{% if (r.input_text or '')|length > 100 %}…{% endif %}</td>
-        <td class="truncate" title="{{ r.model_response or '' }}">{{ (r.model_response or '')[:200] }}{% if (r.model_response or '')|length > 200 %}…{% endif %}</td>
-        <td>{{ "%.4f"|format((r.composite_score or 0)|float) }}</td>
-      </tr>
-    {% endfor %}
-    {% if not failures %}
-      <tr><td colspan="4" style="color:var(--muted)">No results.</td></tr>
-    {% endif %}
-    </tbody>
-  </table>
+  <section style="margin-bottom:28px;">
+    <h2 style="margin:0 0 12px; font-size:1rem; font-weight:600; color:#2d3a8c;">Top 5 failures <span style="font-weight:400; color:#5c6578;">(passed = 0, lowest composite first)</span></h2>
+    <table style="width:100%; border-collapse:collapse; background:#fff5f5; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #f5c6cb;">
+      <thead>
+        <tr style="background:#fde2e4;">
+          <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#8b2942;">Index</th>
+          <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#8b2942;">Input</th>
+          <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#8b2942;">Composite</th>
+          <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#8b2942;">Error</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in failures %}
+        <tr style="border-top:1px solid #f5c6cb;">
+          <td style="padding:10px 12px;">{{ r.item_index }}</td>
+          <td style="padding:10px 12px; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ r.input_text or '' }}">{{ (r.input_text or '')[:80] }}{% if (r.input_text or '')|length > 80 %}…{% endif %}</td>
+          <td style="padding:10px 12px;">{{ "%.4f"|format((r.composite_score or 0)|float) }}</td>
+          <td style="padding:10px 12px; font-size:0.85rem;">{{ r.error or "—" }}</td>
+        </tr>
+      {% endfor %}
+      {% if not failures %}
+        <tr><td colspan="4" style="padding:14px; color:#5c6578;">No failed items.</td></tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </section>
 
-  <h2>Full results</h2>
-  <p style="color:var(--muted);font-size:0.9rem">Sorted by composite score ascending.</p>
-  <table class="data">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Composite</th>
-        <th>Passed</th>
-        <th>Semantic</th>
-        <th>Keyword</th>
-        <th>Structured</th>
-        <th>Latency ms</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for r in results %}
-      <tr>
-        <td>{{ r.item_index }}</td>
-        <td>{{ "%.4f"|format((r.composite_score or 0)|float) }}</td>
-        <td>{% if r.passed %}<span class="pass-yes">✓</span>{% else %}<span class="pass-no">✗</span>{% endif %}</td>
-        <td>{{ "%.4f"|format((r.semantic_score or 0)|float) }}</td>
-        <td>{{ "%.4f"|format((r.keyword_score or 0)|float) }}</td>
-        <td>{{ "%.4f"|format((r.structured_score or 0)|float) }}</td>
-        <td>{{ r.latency_ms if r.latency_ms is not none else "—" }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  <section style="margin-bottom:24px;">
+    <h2 style="margin:0 0 12px; font-size:1rem; font-weight:600; color:#2d3a8c;">Full results</h2>
+    <p style="margin:0 0 10px; font-size:0.85rem; color:#5c6578;">Sorted by composite score ascending.</p>
+    <div style="overflow-x:auto; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      <table style="width:100%; border-collapse:collapse; background:#fff; min-width:640px;">
+        <thead>
+          <tr style="background:#eef1f8;">
+            <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c6578;">Index</th>
+            <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c6578;">Input</th>
+            <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c6578;">Composite</th>
+            <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c6578;">Passed</th>
+            <th style="text-align:left; padding:10px 12px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c6578;">Error</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in results %}
+          <tr style="border-top:1px solid #e8ebf2;">
+            <td style="padding:10px 12px;">{{ r.item_index }}</td>
+            <td style="padding:10px 12px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ r.input_text or '' }}">{{ (r.input_text or '')[:80] }}{% if (r.input_text or '')|length > 80 %}…{% endif %}</td>
+            <td style="padding:10px 12px;">{{ "%.4f"|format((r.composite_score or 0)|float) }}</td>
+            <td style="padding:10px 12px; font-size:1.1rem;">{% if r.passed %}✅{% else %}❌{% endif %}</td>
+            <td style="padding:10px 12px; font-size:0.85rem; color:#5c6578;">{{ r.error or "—" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
 </body>
 </html>
