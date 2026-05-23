@@ -1,4 +1,5 @@
-"""Routes model calls to provider-specific clients based on configuration."""
+content = """\
+\"\"\"Routes model calls to provider-specific clients based on configuration.\"\"\"
 from __future__ import annotations
 import logging
 import httpx
@@ -36,3 +37,8 @@ class LLMRouter:
         except LLMError as exc:
             logger.error("LLM error [%s/%s]: %s", provider, model, exc.message, exc_info=True)
             raise LLMError(exc.message, provider, model) from exc
+"""
+
+with open("evalforge/llm/router.py", "w") as f:
+    f.write(content)
+print("Done")

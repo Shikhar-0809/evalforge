@@ -28,13 +28,10 @@ class GeminiProvider:
         def _sync_call() -> str:
             client = genai.Client(api_key=settings.GEMINI_API_KEY)
             response = client.models.generate_content(
-                model=model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.0,
-                    max_output_tokens=max_tokens,
-                ),
-            )
+    		model=model,
+    		contents=prompt,
+    		config={"temperature": 0.0, "max_output_tokens": max_tokens},
+	    )
             return response.text
 
         try:

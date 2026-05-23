@@ -1,4 +1,4 @@
-"""Typer-based command-line interface for EvalForge."""
+content = '''"""Typer-based command-line interface for EvalForge."""
 
 from __future__ import annotations
 
@@ -110,3 +110,8 @@ def report_cmd(run_id: str = typer.Option(..., "--run-id", help="Eval run UUID")
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(code=2) from exc
     console.print(f"Report saved: {path}")
+'''
+
+with open("evalforge/cli.py", "w") as f:
+    f.write(content)
+print("Done")
